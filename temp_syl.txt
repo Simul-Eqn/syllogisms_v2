@@ -1,0 +1,114 @@
+Given that: 
+all B are A
+some B are C
+all C are D
+
+Is it true that: 
+all A are A
+all A are B
+all A are C
+all A are D
+all B are A
+all B are B
+all B are C
+all B are D
+all C are A
+all C are B
+all C are C
+all C are D
+all D are A
+all D are B
+all D are C
+all D are D
+some A are A
+some A are B
+some A are C
+some A are D
+some B are A
+some B are B
+some B are C
+some B are D
+some C are A
+some C are B
+some C are C
+some C are D
+some D are A
+some D are B
+some D are C
+some D are D
+some A are not A
+some A are not B
+some A are not C
+some A are not D
+some B are not A
+some B are not B
+some B are not C
+some B are not D
+some C are not A
+some C are not B
+some C are not C
+some C are not D
+some D are not A
+some D are not B
+some D are not C
+some D are not D
+no A are A
+no A are B
+no A are C
+no A are D
+no B are A
+no B are B
+no B are C
+no B are D
+no C are A
+no C are B
+no C are C
+no C are D
+no D are A
+no D are B
+no D are C
+no D are D
+all B are A
+all C are A
+all D are A
+all A are B
+all C are B
+all D are B
+all A are C
+all B are C
+all D are C
+all A are D
+all B are D
+all C are D
+some B are not A
+some C are not A
+some D are not A
+some A are not B
+some C are not B
+some D are not B
+some A are not C
+some B are not C
+some D are not C
+some A are not D
+some B are not D
+some C are not D
+
+Given that: 
+all A are B
+some B are not C
+no C are D
+all D are E
+
+Is it true that: 
+all E are A
+
+Given that: 
+some A are not B
+all B are C
+some C are D
+no D are E
+no E are F
+
+Is it true that: 
+some F are A
+
