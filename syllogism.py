@@ -252,7 +252,7 @@ class Syllogism:
 
 
     @staticmethod 
-    def get_conclusions_with_varnames(varnames): 
+    def get_conclusions_with_varnames(varnames:list): 
         res = [] 
         for con_num in range(1,7): 
             for first in varnames: 
@@ -310,8 +310,8 @@ class Syllogism:
     def add_conclusions(self, *conclusions): 
         pass 
 
-    def add_conclusions_and_evaluate(self, conclusions): 
-        pass 
+    def add_conclusions_and_evaluate(self, conclusions): # RETURN CONCLUSION EVALUATION RESULTS 
+        return [False for _ in range(len(conclusions))] 
 
     def process_premises(self): # returns True if no contradiction, False if contradiction 
         self.solveArr = [0 for _ in range(2**len(self.varnames))] 
@@ -616,7 +616,7 @@ class Syllogism:
                 else: 
                     return 0 # maybe 
 
-    def show_visualization(self, title:str="Visualization of Syllogism"): 
+    def show_visualization(self, title:str="Visualization of Syllogism", block:bool=False): 
         assert (self.solveArr != None), "Must process premises of a Syllogism before showing its visualization" 
         assert (len(self.varnames) > 1), "Cannot show visuaslization for Syllogism with only one term" 
         assert (len(self.varnames) < 7), "Cannot show visuaslization for Syllogism with more than 6 terms" 
@@ -637,7 +637,7 @@ class Syllogism:
         # get visualization 
         fig, ax = eval("venn.venn"+str(len(self.varnames))+"(labels, self.varnames)")
         plt.title(title) 
-        plt.show(block=False) 
+        plt.show(block=block) 
     
     def __str__(self): 
         res = "Given that: \n" 

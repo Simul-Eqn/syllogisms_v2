@@ -1,0 +1,31 @@
+Given that: 
+some A are not B
+all B are C
+some C are D
+no D are E
+no E are F
+
+Is it true that: 
+some F are A
+
+Given that: 
+some A are not B
+all B are C
+some C are D
+no D are E
+no E are F
+
+Is it true that: 
+some F are A
+
+Given that: 
+all B are A
+all C are B
+some C are not D
+all D are E
+all E are F
+all F are G
+
+Is it true that: 
+all G are A
+
