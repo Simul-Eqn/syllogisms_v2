@@ -265,9 +265,9 @@ class Syllogism:
         return res 
 
     @staticmethod 
-    def print(*args): 
+    def print(*args, **kwargs): 
         if debugging: 
-            print(*args) 
+            print(*args, **kwargs) 
 
     @staticmethod 
     def blist_to_idx(yay:list): 
@@ -298,20 +298,83 @@ class Syllogism:
         self.varnames = list(varnames) 
     
     def add_premises(self, *premises): 
-        # TODO: verify and add premises 
+        # TODO: verify logic 
+        
+        # validate that they are indeed premises 
+        for pidx in range(len(premises)): 
+            assert (type(premises[pidx]) == SyllogismStatement), "ERROR: Syllogism.add_premises() function takes in SyllogismStatement's are premises, but premise "+str(pidx)+" (0-indexed) is not a SyllogismStatement." 
+
+        # check what new varnames to add 
+        varnames = set(self.varnames) 
+        for premise in premises: 
+            varnames.add(premise.t1) 
+            varnames.add(premise.t2) 
+        self.varnames = list(varnames) 
+
+        # recalculate solve
         self.solveArr = None 
         self.solveExistances = None 
-        pass 
+
+        self.n_premises += len(premises) 
+        self.premises += premises 
+
 
     def add_premises_and_process(self, *premises): 
-        # TODO: process it live yay 
-        pass 
+        # TODO: perhaps this can be speeded up? 
+        # TODO: verify logic 
+        
+        # validate that they are indeed premises 
+        for pidx in range(len(premises)): 
+            assert (type(premises[pidx]) == SyllogismStatement), "ERROR: Syllogism.add_premises_and_process() function takes in SyllogismStatement's are premises, but premise "+str(pidx)+" (0-indexed) is not a SyllogismStatement." 
+
+        # check what new varnames to add 
+        varnames = set(self.varnames) 
+        for premise in premises: 
+            varnames.add(premise.t1) 
+            varnames.add(premise.t2) 
+        self.varnames = list(varnames) 
+
+        # recalculate solve
+        self.solveArr = None 
+        self.solveExistances = None 
+
+        self.n_premises += len(premises) 
+        self.premises += premises 
+
+        self.process_premises() 
+
 
     def add_conclusions(self, *conclusions): 
-        pass 
+        # TODO: verify logic 
 
-    def add_conclusions_and_evaluate(self, conclusions): # RETURN CONCLUSION EVALUATION RESULTS 
-        return [False for _ in range(len(conclusions))] 
+        # validate that they are indeed SyllogismStatements 
+        for cidx in range(len(conclusions)): 
+            assert (type(conclusions[cidx]) == SyllogismStatement), "ERROR: Syllogism.add_conclusions() function takes in SyllogsimStatement's as conclusions, but conclusion "+str(cidx)+" (0-indexed) is not a SyllogismStatement. "
+
+        # add conclusions 
+        self.n_conclusions += len(conclusions) 
+        self.conclusions += conclusions 
+
+    def add_conclusions_and_evaluate(self, conclusions, reevaluate_all:bool=False): # RETURN CONCLUSION EVALUATION RESULTS 
+        # TODO: verify logic and perhaps speed up 
+
+        # validate that they are indeed SyllogismStatements 
+        for cidx in range(len(conclusions)): 
+            assert (type(conclusions[cidx]) == SyllogismStatement), "ERROR: Syllogism.add_conclusions() function takes in SyllogsimStatement's as conclusions, but conclusion "+str(cidx)+" (0-indexed) is not a SyllogismStatement. "
+
+        # add conclusions 
+        self.n_conclusions += len(conclusions) 
+        self.conclusions += conclusions 
+
+        if (reevaluate_all): 
+            # re-evaluate all 
+            return self.evaluate_conclusions() 
+        
+        # else, evaluate only these new ones 
+        ress = [] 
+        for conclusion in conclusions: 
+            ress.append(self.eval_conclusion(conclusion)) 
+        return ress  
 
     def process_premises(self): # returns True if no contradiction, False if contradiction 
         self.solveArr = [0 for _ in range(2**len(self.varnames))] 
@@ -322,8 +385,13 @@ class Syllogism:
         for premise in self.premises: 
              self.eval_premise(premise) 
     
-        if self.check_contradiction():
-            stdout.write("Contradicting syllogisms found, please retry. \n\n\n")
+        contradictions = self.get_contradictions() 
+        if len(contradictions) != 0:
+            
+            stdout.write("CONTRADICTION WHEN PROCESSING SYLLOGISMS: \n\n")
+            self.explain_contradictions(contradictions) 
+            stdout.write("\nContradicting syllogisms found, please retry. \n\n\n")
+
             return False 
         
         Syllogism.print() 
@@ -346,9 +414,9 @@ class Syllogism:
                 if (i==idx1 or i==idx2): continue 
                 other_idxs.append(i) 
             
-            yay = [0 for _ in self.varnames]  
-            yay[idx1] = 1 
-            yay[idx2] = 0 
+            yay = [0 for _ in self.varnames] # yay is a list of 0/1, 1 is in the set, 0 is out of the set 
+            yay[idx1] = 1 # in A 
+            yay[idx2] = 0 # not in V 
 
             def increment_yay_from(i): 
                 if i<0: return # this is normal yay 
@@ -358,11 +426,11 @@ class Syllogism:
                 else: 
                     yay[other_idxs[i]] = 1 
 
-            for _ in range(2**len(other_idxs)): 
+            for _ in range(2**len(other_idxs)): # for all the sets 
                 increment_yay_from( len(other_idxs)-1 ) 
                 idx = Syllogism.blist_to_idx(yay) 
-                if (self.solveArr[idx] > 0): 
-                    # deal with the existances 
+                if (self.solveArr[idx] > 0): # has existances 
+                    # deal with the existances - remove this from the existances counts 
                     for ex_idx in range(len(self.solveExistances)): 
                         if ((1<<ex_idx) & self.solveArr[idx]): 
                             self.solveExistances[ex_idx] -= 1 
@@ -474,13 +542,18 @@ class Syllogism:
                             self.solveExistances[ex_idx] -= 1 
                 self.solveArr[idx] = -1 
             
-    def check_contradiction(self): 
+    def get_contradictions(self): 
         # check for contradictions - one of the existances have zero leftover. 
+        contradictions = [] 
         for ex_num in self.solveExistances: 
             if ex_num <= 0: 
                 Syllogism.print("CONTRADICTION AT EX NUM:",ex_num) 
-                return True 
-        return False 
+                contradictions.append(ex_num) 
+        return contradictions 
+    
+    def explain_contradictions(self, contradictions:list=None): 
+        if (contradictions == None): contradictions = self.get_contradictions() 
+        # TODO: explain contradictions, with stdout not Syllogism.print bcs even if not debug 
 
     def evaluate_conclusions(self): # returns a array of 1/0/-1 for for deftrue/maybe/deffalse for each conclusion 
         assert (self.solveArr != None), "Must process premises of a Syllogism before evaluating its conclusions" 
@@ -492,7 +565,7 @@ class Syllogism:
         return ress 
 
     def eval_conclusion(self, conclusion): 
-        print("\nEVALUATING SYLLOGISM:", conclusion) 
+        Syllogism.print("\nEVALUATING SYLLOGISM:", conclusion) 
         if conclusion.num == 1:
             #all [] are []
             Syllogism.print("all [] are []") 
